@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Банк Кукишей</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff5f8;
+    --card: #ffffff;
+    --ink: #3a2230;
+    --muted: #8c6b7c;
+    --accent: #e8457c;
+    --accent-soft: #ffd9e6;
+    --up: #1f9d6b;
+    --down: #d23f4f;
+    --gold: #d99a1e;
+    --gold-soft: #fff1c9;
+    --line: #f1d3de;
+    --shadow: 0 6px 24px rgba(232, 69, 124, .12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1f141a; --card: #2b1c24; --ink: #fbe9f0; --muted: #c09aad;
+      --accent: #ff6b9a; --accent-soft: #4a2333; --line: #43303a;
+      --up: #4cd39a; --down: #ff7a87; --gold: #ffc94d; --gold-soft: #4a3a1a;
+      --shadow: 0 6px 24px rgba(0,0,0,.35);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1f141a; --card: #2b1c24; --ink: #fbe9f0; --muted: #c09aad;
+    --accent: #ff6b9a; --accent-soft: #4a2333; --line: #43303a;
+    --up: #4cd39a; --down: #ff7a87; --gold: #ffc94d; --gold-soft: #4a3a1a;
+    --shadow: 0 6px 24px rgba(0,0,0,.35);
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Nunito", system-ui, sans-serif; line-height: 1.45;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 20px 16px 60px; }
+  header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .logo {
+    width: 52px; height: 52px; border-radius: 16px; background: var(--accent);
+    display: grid; place-items: center; font-size: 28px; flex: none; box-shadow: var(--shadow);
+  }
+  h1 { margin: 0; font-size: 26px; font-weight: 900; letter-spacing: -.3px; }
+  .sub { color: var(--muted); font-size: 14px; }
+  .card {
+    background: var(--card); border-radius: 20px; padding: 20px;
+    box-shadow: var(--shadow); margin-bottom: 16px;
+  }
+  .card h2 { margin: 0 0 12px; font-size: 18px; font-weight: 900; }
+  .rate-label { color: var(--muted); font-size: 14px; }
+  .rate { font-size: clamp(36px, 10vw, 56px); font-weight: 900; line-height: 1.1; margin: 4px 0; font-variant-numeric: tabular-nums; }
+  .rate small { font-size: .45em; color: var(--muted); font-weight: 700; }
+  .delta { font-weight: 800; font-size: 16px; }
+  .delta.up, .up { color: var(--up); } .delta.down, .down { color: var(--down); }
+  .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .badge {
+    display: inline-block; background: var(--accent-soft); color: var(--accent);
+    border-radius: 999px; padding: 4px 12px; font-weight: 800; font-size: 13px;
+  }
+  .badge.gold { background: var(--gold-soft); color: var(--gold); }
+  .news { border-left: 4px solid var(--accent); padding: 4px 0 4px 12px; margin-top: 14px; }
+  .news b { display: block; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .happy { margin-top: 14px; border-radius: 14px; padding: 12px 14px; background: var(--bg); font-weight: 700; }
+  .happy.on { background: var(--gold-soft); color: var(--gold); animation: glow 1.6s ease-in-out infinite alternate; }
+  @keyframes glow { from { box-shadow: 0 0 0 0 transparent; } to { box-shadow: 0 0 0 4px var(--gold-soft); } }
+  .forecast { display: flex; align-items: center; gap: 14px; }
+  .forecast .arrow { font-size: 40px; line-height: 1; }
+  .forecast .big { font-weight: 900; font-size: 20px; }
+  .meter { height: 10px; background: var(--bg); border-radius: 999px; overflow: hidden; margin-top: 8px; }
+  .meter > div { height: 100%; background: var(--accent); border-radius: 999px; transition: width .4s; }
+  svg { display: block; width: 100%; height: auto; }
+  .chart-meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; margin-top: 6px; }
+  .tip { min-height: 22px; font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  label { display: block; font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  input[type=number], input[type=text] {
+    width: 100%; font: inherit; font-size: 20px; font-weight: 800; padding: 12px 14px;
+    border-radius: 14px; border: 2px solid var(--line); background: var(--bg); color: var(--ink);
+  }
+  input:focus { outline: none; border-color: var(--accent); }
+  .row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: end; }
+  .swap { font-size: 22px; padding-bottom: 12px; color: var(--muted); }
+  button {
+    font: inherit; font-weight: 900; font-size: 17px; border: 0; cursor: pointer;
+    background: var(--accent); color: #fff; padding: 14px 18px; border-radius: 14px; width: 100%;
+    margin-top: 14px; transition: transform .1s;
+  }
+  button:active { transform: scale(.98); }
+  button:disabled { opacity: .5; cursor: default; }
+  button.ghost { background: var(--accent-soft); color: var(--accent); }
+  button.small { width: auto; margin: 0; padding: 8px 14px; font-size: 14px; }
+  button:focus-visible, .save-mini:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+  .err { color: var(--down); font-weight: 700; font-size: 14px; margin-top: 10px; min-height: 0; }
+  .receipt {
+    margin-top: 16px; border: 2px dashed var(--accent); border-radius: 16px; padding: 18px;
+    background: var(--bg); display: none;
+  }
+  .receipt.show { display: block; animation: pop .35s ease; }
+  @keyframes pop { from { transform: scale(.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .receipt .title { text-align: center; font-weight: 900; font-size: 18px; }
+  .receipt .num { text-align: center; color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+  .receipt dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0; }
+  .receipt dt { color: var(--muted); }
+  .receipt dd { margin: 0; text-align: right; font-weight: 800; }
+  .receipt .total { font-size: 22px; color: var(--accent); }
+  .stamp {
+    margin: 14px auto 0; width: fit-content; border: 3px solid var(--accent); color: var(--accent);
+    border-radius: 10px; padding: 4px 12px; font-weight: 900; transform: rotate(-6deg);
+    text-transform: uppercase; letter-spacing: 1px; font-size: 14px;
+  }
+  .history { list-style: none; padding: 0; margin: 0; }
+  .history li { display: flex; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .history li:last-child { border-bottom: 0; }
+  .history li > span:nth-child(2) { margin-left: auto; text-align: right; }
+  .save-mini { cursor: pointer; font-size: 20px; align-self: center; padding: 4px; background: none; border: 0; }
+  .muted { color: var(--muted); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat { background: var(--bg); border-radius: 14px; padding: 12px; }
+  .stat .v { font-weight: 900; font-size: 20px; font-variant-numeric: tabular-nums; }
+  .stat .k { color: var(--muted); font-size: 12px; }
+  .deposits { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 10px; }
+  .deposits li { background: var(--bg); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+  .deposits li > div { flex: 1; min-width: 0; }
+  .ach { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  .ach div { background: var(--bg); border-radius: 14px; padding: 12px; text-align: center; }
+  .ach .ic { font-size: 30px; }
+  .ach .nm { font-weight: 900; font-size: 14px; }
+  .ach .ds { color: var(--muted); font-size: 12px; }
+  .ach .locked { opacity: .45; filter: grayscale(1); }
+  .ach .got { background: var(--gold-soft); }
+  .wish { font-size: 18px; font-weight: 700; text-align: center; padding: 8px 0; min-height: 60px; }
+  .wrapper-day { max-width: 360px; margin: 0 auto; transform: rotate(-2deg); }
+  .wrapper-day svg { width: 100%; display: block; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,.12); }
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 15;
+    background: var(--ink); color: var(--card); padding: 12px 18px; border-radius: 14px;
+    font-weight: 800; box-shadow: var(--shadow); max-width: calc(100% - 32px); text-align: center;
+  }
+  .toast[hidden] { display: none; }
+  .shot {
+    position: fixed; inset: 0; background: rgba(20,8,14,.88); z-index: 20;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px; padding: 16px; text-align: center; color: #fff;
+  }
+  .shot[hidden] { display: none; }
+  .shot img { max-width: min(100%, 420px); max-height: 70vh; border-radius: 14px; -webkit-touch-callout: default; }
+  .shot .acts { display: flex; gap: 10px; width: min(100%, 420px); }
+  .shot .acts button, .shot .acts a { margin: 0; flex: 1; }
+  .shot a.dl {
+    display: block; text-decoration: none; background: var(--accent); color: #fff; font-weight: 900;
+    padding: 14px 18px; border-radius: 14px;
+  }
+  footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 24px; }
+  .confetti { position: fixed; top: -20px; font-size: 22px; pointer-events: none; animation: fall linear forwards; z-index: 9; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .happy.on, .receipt.show { animation: none; }
+    .confetti { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">🍬</div>
+    <div>
+      <h1>Банк Кукишей</h1>
+      <div class="sub">Центральный банк обмена фантиков на рубли · <span id="today"></span></div>
+    </div>
+  </header>
+
+  <section class="card">
+    <div class="rate-label" id="rate-label">Официальный курс на сегодня</div>
+    <div class="rate">1 кукиш = <span id="rate"></span> <small>₽</small></div>
+    <div class="delta" id="delta"></div>
+    <div class="badges" id="badges"></div>
+    <div class="happy" id="happy"></div>
+    <div class="news"><b>Новости рынка</b><span id="news"></span></div>
+  </section>
+
+  <section class="card">
+    <h2>Прогноз на завтра</h2>
+    <div class="forecast">
+      <div class="arrow" id="fc-arrow"></div>
+      <div>
+        <div class="big" id="fc-text"></div>
+        <div class="muted" id="fc-conf"></div>
+      </div>
+    </div>
+    <p class="muted" style="margin:12px 0 0;font-size:14px" id="fc-yesterday"></p>
+  </section>
+
+  <section class="card">
+    <h2>Динамика курса за 30 дней</h2>
+    <div class="tip" id="tip">Нажми на график, чтобы увидеть курс за день</div>
+    <svg id="chart" viewBox="0 0 600 220" role="img" aria-label="График курса кукиша за 30 дней"></svg>
+    <div class="chart-meta"><span id="c-from"></span><span id="c-to"></span></div>
+    <div class="grid2" style="margin-top:14px">
+      <div class="stat"><div class="k">Максимум за месяц</div><div class="v" id="s-max"></div></div>
+      <div class="stat"><div class="k">Минимум за месяц</div><div class="v" id="s-min"></div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Калькулятор</h2>
+    <div class="row">
+      <div><label for="in-k">Кукиши</label><input id="in-k" type="number" min="0" step="1" value="10" inputmode="numeric"></div>
+      <div class="swap">⇄</div>
+      <div><label for="in-r">Рубли</label><input id="in-r" type="number" min="0" step="0.01" inputmode="decimal"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Кукиш дня</h2>
+    <div class="wrapper-day" id="wrapper-day"></div>
+    <p style="text-align:center;margin:16px 0 0">Есть фантик с номером <b id="day-num"></b>?<br>Сегодня он меняется по двойному курсу: <b id="day-rate" style="color:var(--accent)"></b></p>
+  </section>
+
+  <section class="card">
+    <h2>Заявка на обмен</h2>
+    <div class="stat">
+      <div class="k">Лимит кассы на сегодня</div>
+      <div class="v"><span id="lim-left"></span> <span class="muted" style="font-size:14px;font-weight:700">осталось из <span id="lim-total"></span></span></div>
+      <div class="meter"><div id="lim-bar"></div></div>
+    </div>
+    <p class="muted" style="margin:12px 0">Курс фиксируется в момент подачи заявки. Покажи чек кассиру — он выдаст рубли.</p>
+    <label for="ex-n">Сколько кукишей сдаёшь?</label>
+    <input id="ex-n" type="number" min="1" step="1" placeholder="например, 25" inputmode="numeric">
+    <label for="ex-d" style="margin-top:12px">Из них кукишей дня (<span id="ex-d-num"></span>, курс ×2)</label>
+    <input id="ex-d" type="number" min="0" step="1" value="0" inputmode="numeric">
+    <div class="err" id="ex-err"></div>
+    <button id="ex-btn">Обменять кукиши</button>
+    <div class="receipt" id="receipt"></div>
+  </section>
+
+  <section class="card">
+    <h2>Вклад «Терпеливый кукиш»</h2>
+    <p class="muted" style="margin:0 0 12px">Положи кукиши на <span id="dep-days"></span> дней. Потом забери рубли по курсу дня, в который забираешь, плюс <span id="dep-bonus"></span>% сверху. Чем удачнее день — тем больше получишь.</p>
+    <label for="dep-n">Сколько кукишей кладёшь на вклад?</label>
+    <input id="dep-n" type="number" min="1" step="1" placeholder="например, 20" inputmode="numeric">
+    <button class="ghost" id="dep-btn">Открыть вклад</button>
+    <ul class="deposits" id="deposits"></ul>
+  </section>
+
+  <section class="card">
+    <h2>Мои заявки</h2>
+    <ul class="history" id="history"></ul>
+    <div class="grid2" style="margin-top:12px">
+      <div class="stat"><div class="k">Всего сдано кукишей</div><div class="v" id="t-k">0</div></div>
+      <div class="stat"><div class="k">Всего получено</div><div class="v" id="t-r">0 ₽</div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Достижения <span class="muted" id="ach-count" style="font-size:14px"></span></h2>
+    <div class="ach" id="ach"></div>
+  </section>
+
+  <section class="card">
+    <h2>Предсказание дня</h2>
+    <div class="wish" id="wish">Разверни фантик 👇</div>
+    <button class="ghost" id="wish-btn">Развернуть фантик</button>
+  </section>
+
+  <div class="shot" id="shot" hidden>
+    <img id="shot-img" alt="Чек Банка Кукишей">
+    <div>Нажми и удерживай чек (или правый клик), чтобы сохранить картинку</div>
+    <div class="acts">
+      <a class="dl" id="shot-dl" href="#">Скачать</a>
+      <button class="ghost" id="shot-close">Закрыть</button>
+    </div>
+  </div>
+  <div class="toast" id="toast" hidden></div>
+
+  <footer>Банк Кукишей · вклады не застрахованы, но горячо любимы 💗</footer>
+</div>
+
+<script>
+/* ================= НАСТРОЙКИ ================= */
+const CONFIG = {
+  baseRate: 25,          // средний курс, ₽ за 1 кукиш
+  dailyLimit: 777,       // лимит кассы на обычный день, ₽
+  // Особые лимиты кассы (MM-DD): ₽ на этот день
+  specialLimits: {
+    "12-29": 5000,
+    "03-08": 5000,
+    "02-14": 3000,
+    "12-31": 3000,
+  },
+  // Особые дни (MM-DD): курс умножается на mult
+  specialDays: {
+    "02-14": { mult: 2.0,  text: "День всех влюблённых — курс удвоен! 💘" },
+    "03-08": { mult: 1.5,  text: "8 Марта — праздничная надбавка +50% 🌷" },
+    "12-31": { mult: 1.3,  text: "Новогодний бонус +30% 🎄" },
+    "01-01": { mult: 1.3,  text: "Новогодний бонус +30% 🎄" },
+    // "09-01": { mult: 1.5, text: "Наша годовщина — курс +50% 💞" },
+  },
+  happyHour: { from: 10, to: 22, mult: 1.25 },   // один случайный час в день между from и to
+  deposit: { days: 7, bonus: 0.10 },             // вклад: срок и надбавка
+  forecastAccuracy: 0.7,                         // как часто прогноз сбывается
+  // Кукиш дня: случайный номер фантика из диапазона, меняется по курсу × dayMult
+  dayNumberMin: 1,
+  dayNumberMax: 999,
+  dayMult: 2,
+};
+/* ============================================= */
+
+const DAY = 86400000;
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, "0");
+const dayIndex = d => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / DAY);
+const fromIndex = i => { const d = new Date(i * DAY); return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()); };
+const mmdd = d => pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+const fmtDate = d => d.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+const rub = v => v.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const rub0 = v => Math.floor(v).toLocaleString("ru-RU");
+const r2 = v => Math.round(v * 100) / 100;
+
+// Детерминированный «случайный» шум по номеру дня — у всех одинаковый курс
+function hash(n) {
+  let x = (n * 2654435761) >>> 0;
+  x = (x ^ (x >>> 16)) >>> 0; x = Math.imul(x, 0x45d9f3b) >>> 0; x = (x ^ (x >>> 16)) >>> 0;
+  return x / 4294967296;
+}
+function rateFor(i) {
+  const k = 1 + 0.16 * Math.sin(i / 23) + 0.08 * Math.sin(i / 6.7 + 2) + 0.12 * (hash(i) - 0.5);
+  let r = CONFIG.baseRate * k;
+  const sp = CONFIG.specialDays[mmdd(fromIndex(i))];
+  if (sp) r *= sp.mult;
+  return r2(r);
+}
+const limitFor = i => CONFIG.specialLimits[mmdd(fromIndex(i))] || CONFIG.dailyLimit;
+const happyHourFor = i => CONFIG.happyHour.from + Math.floor(hash(i + 313) * (CONFIG.happyHour.to - CONFIG.happyHour.from));
+
+/* ---------- Хранилище (только в этом браузере) ---------- */
+const mem = {};
+const store = {
+  get(key, def) {
+    if (key in mem) return JSON.parse(mem[key]);
+    try { const v = localStorage.getItem("kukishi-" + key); return v ? JSON.parse(v) : def; } catch { return def; }
+  },
+  set(key, v) {
+    mem[key] = JSON.stringify(v);
+    try { localStorage.setItem("kukishi-" + key, mem[key]); } catch {}
+  },
+};
+
+/* ---------- Состояние дня ---------- */
+let now = new Date();
+let todayI = dayIndex(now);
+const baseRate = () => rateFor(todayI);
+const isHappy = () => now.getHours() === happyHourFor(todayI);
+const curRate = () => r2(baseRate() * (isHappy() ? CONFIG.happyHour.mult : 1));
+const curDayRate = () => r2(curRate() * CONFIG.dayMult);
+const dayNum = () => CONFIG.dayNumberMin + Math.floor(hash(todayI + 99) * (CONFIG.dayNumberMax - CONFIG.dayNumberMin + 1));
+const usedToday = () => store.get("history", []).filter(h => dayIndex(new Date(h.t)) === todayI).reduce((s, h) => s + h.sum, 0);
+const leftToday = () => Math.max(0, r2(limitFor(todayI) - usedToday()));
+const last30 = () => { const a = []; for (let k = 29; k >= 0; k--) a.push({ i: todayI - k, r: rateFor(todayI - k) }); return a; };
+const isPeak = () => baseRate() >= Math.max(...last30().map(p => p.r));
+const isHoliday = i => !!(CONFIG.specialDays[mmdd(fromIndex(i))] || CONFIG.specialLimits[mmdd(fromIndex(i))]);
+
+/* ---------- Курс ---------- */
+const newsUp = [
+  "Аналитики фиксируют рост спроса на кукиши после удачного свидания.",
+  "Кукиш укрепился на фоне повышенного уровня обнимашек в экономике.",
+  "Инвесторы скупают редкие фантики — курс уверенно растёт.",
+  "Центробанк объявил кукиш самой милой валютой года.",
+  "Рост курса связывают с хорошим настроением главного держателя кукишей.",
+  "Ожидания поцелуев подтолкнули котировки вверх.",
+];
+const newsDown = [
+  "Курс слегка просел: кассир съел последнюю жвачку и загрустил.",
+  "Небольшая коррекция после слишком долгого рабочего дня.",
+  "На рынке избыток фантиков — держатели не спешат с обменом.",
+  "Курс снизился на ожиданиях выходных, но аналитики спокойны.",
+  "Временное ослабление: участники рынка ушли пить чай.",
+  "Кукиш подешевел на слухах о новой поставке жвачек.",
+];
+
+function renderRate() {
+  const rate = curRate(), prev = rateFor(todayI - 1);
+  const diff = baseRate() - prev, pct = diff / prev * 100;
+  $("today").textContent = now.toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  $("rate").textContent = rub(rate);
+  $("rate-label").textContent = isHappy() ? "Курс прямо сейчас (счастливый час!)" : "Официальный курс на сегодня";
+  const d = $("delta");
+  d.className = "delta " + (diff >= 0 ? "up" : "down");
+  d.textContent = (diff >= 0 ? "▲ +" : "▼ ") + rub(diff) + " ₽ (" + (diff >= 0 ? "+" : "") + pct.toFixed(1) + "%) к вчерашнему";
+
+  const b = $("badges"); b.innerHTML = "";
+  const addBadge = (t, cls) => { const s = document.createElement("span"); s.className = "badge " + (cls || ""); s.textContent = t; b.appendChild(s); };
+  const sp = CONFIG.specialDays[mmdd(now)];
+  if (sp) addBadge(sp.text);
+  if (CONFIG.specialLimits[mmdd(now)]) addBadge("Праздничный лимит кассы: " + rub0(limitFor(todayI)) + " ₽ 🎁", "gold");
+  if (isPeak()) addBadge("Курс на максимуме месяца 📈", "gold");
+
+  const pool = diff >= 0 ? newsUp : newsDown;
+  $("news").textContent = pool[Math.floor(hash(todayI + 777) * pool.length)];
+
+  const hh = happyHourFor(todayI), h = now.getHours(), hp = $("happy");
+  const pctH = Math.round((CONFIG.happyHour.mult - 1) * 100);
+  hp.className = "happy" + (h === hh ? " on" : "");
+  if (h === hh) hp.textContent = `🔥 Счастливый час! До ${pad(hh)}:59 курс +${pctH}%. Успей обменять!`;
+  else if (h < hh) hp.textContent = `⏰ Сегодня будет счастливый час: курс +${pctH}% на целый час. Когда — секрет, ${hh < 14 ? "но до обеда 🤫" : hh < 18 ? "но после обеда 🤫" : "но ближе к вечеру 🤫"}`;
+  else hp.textContent = `Счастливый час сегодня уже был — в ${pad(hh)}:00. Завтра будет новый.`;
+
+  $("day-num").textContent = "№" + dayNum();
+  $("ex-d-num").textContent = "№" + dayNum();
+  $("day-rate").textContent = rub(curDayRate()) + " ₽ за штуку";
+  syncFromK();
+}
+
+/* ---------- Прогноз ---------- */
+function forecastFor(i) {
+  const up = rateFor(i + 1) >= rateFor(i);
+  const right = hash(i + 555) < CONFIG.forecastAccuracy;
+  return { saysUp: right ? up : !up, right, conf: 55 + Math.floor(hash(i + 556) * 40) };
+}
+function renderForecast() {
+  const f = forecastFor(todayI);
+  $("fc-arrow").textContent = f.saysUp ? "📈" : "📉";
+  $("fc-text").textContent = f.saysUp ? "Аналитики ждут роста курса" : "Аналитики ждут снижения курса";
+  $("fc-text").className = "big " + (f.saysUp ? "up" : "down");
+  $("fc-conf").textContent = `Уверенность ${f.conf}%. ${f.saysUp ? "Может, подождать до завтра?" : "Может, лучше обменять сегодня?"}`;
+  const y = forecastFor(todayI - 1);
+  $("fc-yesterday").textContent = `Вчерашний прогноз (${y.saysUp ? "рост" : "снижение"}) ${y.right ? "сбылся ✅" : "не сбылся ❌ — аналитики тоже ошибаются"}`;
+}
+
+/* ---------- График ---------- */
+function renderChart() {
+  const pts = last30(), N = pts.length, vals = pts.map(p => p.r);
+  const max = Math.max(...vals), min = Math.min(...vals);
+  const W = 600, H = 220, P = 16;
+  const xOf = j => P + j * (W - 2 * P) / (N - 1);
+  const yOf = r => P + (max - r) * (H - 2 * P) / ((max - min) || 1);
+  const line = pts.map((p, j) => xOf(j).toFixed(1) + "," + yOf(p.r).toFixed(1)).join(" ");
+  const area = `${xOf(0)},${H - 4} ${line} ${xOf(N - 1)},${H - 4}`;
+  const svg = $("chart");
+  svg.innerHTML = `
+    <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="var(--accent)" stop-opacity=".35"/>
+      <stop offset="1" stop-color="var(--accent)" stop-opacity="0"/>
+    </linearGradient></defs>
+    <polygon points="${area}" fill="url(#g)"/>
+    <polyline points="${line}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    <line id="cursor" x1="0" x2="0" y1="0" y2="${H}" stroke="var(--muted)" stroke-dasharray="4 4" opacity="0"/>
+    <circle id="dot" r="6" fill="var(--accent)" stroke="var(--card)" stroke-width="3" cx="${xOf(N - 1)}" cy="${yOf(vals[N - 1])}"/>`;
+  $("c-from").textContent = fmtDate(fromIndex(pts[0].i));
+  $("c-to").textContent = "сегодня";
+  $("s-max").textContent = rub(max) + " ₽";
+  $("s-min").textContent = rub(min) + " ₽";
+  function showPoint(clientX) {
+    const box = svg.getBoundingClientRect();
+    const x = (clientX - box.left) / box.width * W;
+    const j = Math.max(0, Math.min(N - 1, Math.round((x - P) / ((W - 2 * P) / (N - 1)))));
+    const p = pts[j];
+    $("dot").setAttribute("cx", xOf(j)); $("dot").setAttribute("cy", yOf(p.r));
+    $("cursor").setAttribute("x1", xOf(j)); $("cursor").setAttribute("x2", xOf(j)); $("cursor").setAttribute("opacity", ".6");
+    $("tip").textContent = (j === N - 1 ? "Сегодня" : fmtDate(fromIndex(p.i))) + ": 1 кукиш = " + rub(p.r) + " ₽";
+  }
+  svg.onpointermove = e => showPoint(e.clientX);
+  svg.onpointerdown = e => showPoint(e.clientX);
+}
+
+/* ---------- Калькулятор ---------- */
+const inK = $("in-k"), inR = $("in-r");
+function syncFromK() { inR.value = inK.value === "" ? "" : r2(+inK.value * curRate()); }
+function syncFromR() { inK.value = inR.value === "" ? "" : r2(+inR.value / curRate()); }
+inK.addEventListener("input", syncFromK);
+inR.addEventListener("input", syncFromR);
+
+/* ---------- Кукиш дня ---------- */
+function drawnWrapper(seed, num) {
+  const palettes = [["#ffd6e4", "#e8457c"], ["#fff1c9", "#e89a2c"], ["#d9f0ff", "#3a8fd6"], ["#e3f7dc", "#3fa060"], ["#efe0ff", "#8a5ad6"]];
+  const [bg, fg] = palettes[Math.floor(hash(seed) * palettes.length)];
+  const s = Math.floor(hash(seed + 1) * 1000);
+  let hearts = "";
+  for (let k = 0; k < 7; k++) {
+    const x = 20 + hash(s + k) * 260, y = 20 + hash(s + k + 50) * 150, r = 6 + hash(s + k + 99) * 10;
+    hearts += `<path transform="translate(${x.toFixed(0)} ${y.toFixed(0)}) scale(${(r / 10).toFixed(2)})" d="M0 4 C-6 -4 -12 2 0 12 C12 2 6 -4 0 4Z" fill="${fg}" opacity=".18"/>`;
+  }
+  return `<svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" aria-label="Кукиш дня №${num}">
+    <rect width="300" height="200" rx="14" fill="${bg}"/>
+    <rect x="8" y="8" width="284" height="184" rx="10" fill="none" stroke="${fg}" stroke-width="3" stroke-dasharray="2 7" stroke-linecap="round"/>
+    ${hearts}
+    <path d="M150 92 C128 60 92 82 150 132 C208 82 172 60 150 92Z" fill="${fg}"/>
+    <text x="150" y="170" text-anchor="middle" font-family="Nunito, sans-serif" font-weight="900" font-size="20" fill="${fg}">кукиш №${num}</text>
+    <text x="270" y="40" text-anchor="end" font-family="Nunito, sans-serif" font-weight="900" font-size="22" fill="${fg}">×${CONFIG.dayMult}</text>
+  </svg>`;
+}
+
+/* ---------- Лимит ---------- */
+function renderLimit() {
+  const total = limitFor(todayI), left = leftToday();
+  $("lim-left").textContent = rub(left) + " ₽";
+  $("lim-total").textContent = rub0(total) + " ₽";
+  $("lim-bar").style.width = (left / total * 100) + "%";
+  $("ex-btn").disabled = left <= 0;
+  $("ex-btn").textContent = left <= 0 ? "Касса на сегодня пуста — приходи завтра" : "Обменять кукиши";
+}
+
+/* ---------- Заявки ---------- */
+const newId = (prefix, d) => prefix + "-" + pad(d.getDate()) + pad(d.getMonth() + 1) + "-" + String(Math.floor(Math.random() * 9000) + 1000);
+
+function receiptRows(h) {
+  const rows = [
+    ["Дата", new Date(h.t).toLocaleString("ru-RU", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })],
+  ];
+  if (h.kind === "deposit") {
+    rows.push(["Вклад", h.n + " шт., открыт " + fmtDate(fromIndex(h.openI))]);
+    rows.push(["Курс дня", rub(h.rate) + " ₽"]);
+    rows.push(["Надбавка вклада", "+" + Math.round(CONFIG.deposit.bonus * 100) + "%"]);
+  } else {
+    rows.push(["Сдано кукишей", h.n + " шт."]);
+    rows.push(["Курс" + (h.happy ? " (счастливый час)" : ""), rub(h.rate) + " ₽"]);
+    if (h.dn) rows.push(["Кукиши дня №" + h.dayNum, h.dn + " шт. × " + rub(h.dayRate) + " ₽"]);
+  }
+  return rows;
+}
+
+function showReceipt(h) {
+  const rec = $("receipt");
+  rec.innerHTML = `<div class="title"></div><div class="num"></div><dl></dl>
+    <div class="stamp">Одобрено</div>
+    <p class="muted" style="text-align:center;margin:12px 0 0;font-size:13px">Предъяви чек кассиру. Действителен до конца дня.</p>
+    <button class="ghost" id="save-btn">💾 Сохранить чек</button>`;
+  rec.querySelector(".title").textContent = h.kind === "deposit" ? "🏦 Чек выплаты по вкладу" : "🍬 Чек обмена кукишей";
+  rec.querySelector(".num").textContent = "№ " + h.id;
+  const dl = rec.querySelector("dl");
+  receiptRows(h).concat([["К выдаче", rub(h.sum) + " ₽"]]).forEach(([k, v], idx, arr) => {
+    const dt = document.createElement("dt"), dd = document.createElement("dd");
+    dt.textContent = k; dd.textContent = v;
+    if (idx === arr.length - 1) dd.className = "total";
+    dl.append(dt, dd);
+  });
+  rec.querySelector("#save-btn").addEventListener("click", () => saveReceipt(h));
+  rec.classList.remove("show"); void rec.offsetWidth; rec.classList.add("show");
+  rec.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function addHistory(entry) {
+  const list = store.get("history", []); list.push(entry); store.set("history", list);
+}
+
+$("ex-btn").addEventListener("click", () => {
+  const err = $("ex-err"); err.textContent = "";
+  const input = $("ex-n");
+  const n = Math.floor(+input.value);
+  if (!n || n < 1) { input.focus(); err.textContent = "Впиши, сколько кукишей сдаёшь."; return; }
+  const dIn = $("ex-d");
+  const dn = Math.min(n, Math.max(0, Math.floor(+dIn.value || 0)));
+  dIn.value = dn;
+  const rate = curRate(), dayRate = curDayRate();
+  const sum = r2((n - dn) * rate + dn * dayRate);
+  const left = leftToday();
+  if (sum > left) {
+    const maxN = Math.floor(left / rate);
+    err.textContent = `В кассе сегодня осталось ${rub(left)} ₽ — это максимум ${maxN} ${plural(maxN, "кукиш", "кукиша", "кукишей")} по обычному курсу. Остальные приноси завтра!`;
+    return;
+  }
+  const d = new Date();
+  const entry = { kind: "exchange", id: newId("КБ", d), n, dn, dayNum: dayNum(), rate, dayRate, sum, t: d.getTime(),
+                  happy: isHappy(), peak: isPeak(), holiday: isHoliday(todayI) };
+  addHistory(entry);
+  showReceipt(entry);
+  input.value = ""; dIn.value = 0;
+  afterChange();
+  confetti();
+});
+
+function plural(n, one, few, many) {
+  const m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+  return many;
+}
+
+function renderHistory() {
+  const list = store.get("history", []);
+  const ul = $("history");
+  ul.innerHTML = "";
+  if (!list.length) ul.innerHTML = '<li class="muted">Пока ни одной заявки — самое время обменять первые кукиши!</li>';
+  let tk = 0, tr = 0;
+  list.slice().reverse().forEach(h => {
+    tk += h.n; tr += h.sum;
+    const li = document.createElement("li");
+    li.innerHTML = `<span><b></b><br><span class="muted"></span></span><span><b></b><br><span class="muted"></span></span>`;
+    const b = li.querySelectorAll("b"), m = li.querySelectorAll(".muted");
+    b[0].textContent = (h.kind === "deposit" ? "🏦 " : "") + h.id;
+    m[0].textContent = new Date(h.t).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+    b[1].textContent = rub(h.sum) + " ₽";
+    m[1].textContent = h.kind === "deposit" ? "вклад, " + h.n + " шт." : h.n + " шт. × " + rub(h.rate) + (h.dn ? " · кукиш дня ×" + h.dn : "");
+    const save = document.createElement("button");
+    save.className = "save-mini"; save.textContent = "💾"; save.title = "Сохранить чек"; save.setAttribute("aria-label", "Сохранить чек " + h.id);
+    save.addEventListener("click", () => saveReceipt(h));
+    li.appendChild(save);
+    ul.appendChild(li);
+  });
+  $("t-k").textContent = tk;
+  $("t-r").textContent = rub(tr) + " ₽";
+}
+
+/* ---------- Вклад ---------- */
+$("dep-days").textContent = CONFIG.deposit.days;
+$("dep-bonus").textContent = Math.round(CONFIG.deposit.bonus * 100);
+
+$("dep-btn").addEventListener("click", () => {
+  const input = $("dep-n");
+  const n = Math.floor(+input.value);
+  if (!n || n < 1) { input.focus(); return; }
+  const deps = store.get("deposits", []);
+  deps.push({ id: newId("ВК", new Date()), n, openI: todayI, matureI: todayI + CONFIG.deposit.days, claimed: false });
+  store.set("deposits", deps);
+  input.value = "";
+  toast(`Вклад открыт: ${n} ${plural(n, "кукиш", "кукиша", "кукишей")} до ${fmtDate(fromIndex(todayI + CONFIG.deposit.days))}. Отдай фантики кассиру!`);
+  afterChange();
+});
+
+function claimDeposit(id) {
+  const deps = store.get("deposits", []);
+  const dep = deps.find(x => x.id === id);
+  if (!dep || dep.claimed || todayI < dep.matureI) return;
+  const rate = r2(curRate() * (1 + CONFIG.deposit.bonus));
+  const sum = r2(dep.n * rate);
+  if (sum > leftToday()) { toast(`В кассе сегодня только ${rub(leftToday())} ₽, а по вкладу положено ${rub(sum)} ₽. Забери в другой день — вклад подождёт.`); return; }
+  dep.claimed = true; store.set("deposits", deps);
+  const d = new Date();
+  const entry = { kind: "deposit", id: newId("КБ", d), n: dep.n, openI: dep.openI, rate: curRate(), sum, t: d.getTime(),
+                  happy: isHappy(), peak: isPeak(), holiday: isHoliday(todayI) };
+  addHistory(entry);
+  showReceipt(entry);
+  afterChange();
+  confetti();
+}
+
+function renderDeposits() {
+  const deps = store.get("deposits", []).filter(x => !x.claimed);
+  const ul = $("deposits"); ul.innerHTML = "";
+  deps.forEach(dep => {
+    const li = document.createElement("li");
+    const info = document.createElement("div");
+    const left = dep.matureI - todayI;
+    const est = r2(dep.n * curRate() * (1 + CONFIG.deposit.bonus));
+    info.innerHTML = "<b></b><br><span class='muted'></span>";
+    info.querySelector("b").textContent = dep.n + " " + plural(dep.n, "кукиш", "кукиша", "кукишей");
+    info.querySelector(".muted").textContent = left > 0
+      ? `ещё ${left} ${plural(left, "день", "дня", "дней")} · до ${fmtDate(fromIndex(dep.matureI))}`
+      : `созрел! Сегодня это ${rub(est)} ₽`;
+    li.appendChild(info);
+    if (left <= 0) {
+      const btn = document.createElement("button");
+      btn.className = "small"; btn.textContent = "Забрать";
+      btn.addEventListener("click", () => claimDeposit(dep.id));
+      li.appendChild(btn);
+    } else {
+      const s = document.createElement("span"); s.textContent = "🔒"; s.style.fontSize = "22px"; li.appendChild(s);
+    }
+    ul.appendChild(li);
+  });
+}
+
+/* ---------- Достижения ---------- */
+const ACH = [
+  { id: "first",   ic: "🎉", nm: "Первый обмен",       ds: "Обменять кукиши в первый раз",  ok: s => s.ex.length >= 1 },
+  { id: "k100",    ic: "💯", nm: "Сотня",              ds: "Сдать 100 кукишей",             ok: s => s.k >= 100 },
+  { id: "r1000",   ic: "💰", nm: "Тысячница",          ds: "Получить 1 000 ₽",              ok: s => s.r >= 1000 },
+  { id: "daynum",  ic: "🔎", nm: "Охотница за номерами", ds: "Сдать кукиш дня",             ok: s => s.ex.some(h => h.dn > 0) },
+  { id: "happy",   ic: "⏰", nm: "Счастливица",        ds: "Обменять в счастливый час",     ok: s => s.all.some(h => h.happy) },
+  { id: "peak",    ic: "📈", nm: "На пике",            ds: "Обменять на максимуме месяца",  ok: s => s.all.some(h => h.peak) },
+  { id: "limit",   ic: "🏧", nm: "Опустошила кассу",   ds: "Выбрать весь дневной лимит",    ok: s => s.fullDay },
+  { id: "holiday", ic: "🎁", nm: "Праздничный обмен",  ds: "Обменять в праздник",           ok: s => s.all.some(h => h.holiday) },
+  { id: "dep",     ic: "🏦", nm: "Инвестор",           ds: "Открыть вклад",                 ok: s => s.deps.length >= 1 },
+  { id: "depok",   ic: "🌱", nm: "Терпение окупается", ds: "Забрать вклад",                 ok: s => s.all.some(h => h.kind === "deposit") },
+];
+function achState() {
+  const all = store.get("history", []);
+  const ex = all.filter(h => h.kind !== "deposit");
+  const byDay = {};
+  all.forEach(h => { const i = dayIndex(new Date(h.t)); byDay[i] = (byDay[i] || 0) + h.sum; });
+  const fullDay = Object.keys(byDay).some(i => limitFor(+i) - byDay[i] < 1);
+  return { all, ex, deps: store.get("deposits", []), fullDay,
+           k: all.reduce((s, h) => s + h.n, 0), r: all.reduce((s, h) => s + h.sum, 0) };
+}
+function renderAch(announce) {
+  const s = achState();
+  const got = store.get("ach", {});
+  const box = $("ach"); box.innerHTML = "";
+  let count = 0;
+  ACH.forEach(a => {
+    const ok = a.ok(s);
+    if (ok) {
+      count++;
+      if (!got[a.id]) { got[a.id] = Date.now(); if (announce) setTimeout(() => toast(`Новое достижение: ${a.ic} ${a.nm}!`), 600); }
+    }
+    const d = document.createElement("div");
+    d.className = ok ? "got" : "locked";
+    d.innerHTML = "<div class='ic'></div><div class='nm'></div><div class='ds'></div>";
+    d.querySelector(".ic").textContent = a.ic;
+    d.querySelector(".nm").textContent = a.nm;
+    d.querySelector(".ds").textContent = a.ds;
+    box.appendChild(d);
+  });
+  store.set("ach", got);
+  $("ach-count").textContent = `${count} из ${ACH.length}`;
+}
+
+/* ---------- Сохранение чека картинкой ---------- */
+async function saveReceipt(h) {
+  try { await document.fonts.ready; } catch {}
+  const S = 2, W = 420;
+  const rows = receiptRows(h);
+  const H = 300 + rows.length * 34;
+  const c = document.createElement("canvas");
+  c.width = W * S; c.height = H * S;
+  const g = c.getContext("2d");
+  g.scale(S, S);
+  const font = (w, s) => `${w} ${s}px Nunito, system-ui, sans-serif`;
+  const pink = "#e8457c", ink = "#3a2230", muted = "#8c6b7c";
+
+  g.fillStyle = "#fff5f8"; g.fillRect(0, 0, W, H);
+  g.fillStyle = "#ffffff";
+  g.beginPath(); g.roundRect(14, 14, W - 28, H - 28, 18); g.fill();
+  g.setLineDash([8, 6]); g.lineWidth = 2; g.strokeStyle = pink; g.stroke(); g.setLineDash([]);
+
+  g.textAlign = "center"; g.fillStyle = ink;
+  g.font = font(900, 22); g.fillText("🍬 Банк Кукишей", W / 2, 56);
+  g.font = font(700, 15); g.fillStyle = muted;
+  g.fillText((h.kind === "deposit" ? "Выплата по вкладу № " : "Чек обмена кукишей № ") + h.id, W / 2, 82);
+
+  let y = 124;
+  rows.forEach(([k, v]) => {
+    g.textAlign = "left"; g.fillStyle = muted; g.font = font(400, 15); g.fillText(k, 36, y);
+    g.textAlign = "right"; g.fillStyle = ink; g.font = font(800, 15); g.fillText(v, W - 36, y);
+    y += 34;
+  });
+  g.strokeStyle = "#f1d3de"; g.beginPath(); g.moveTo(36, y - 14); g.lineTo(W - 36, y - 14); g.stroke();
+  y += 14;
+  g.textAlign = "left"; g.fillStyle = muted; g.font = font(700, 17); g.fillText("К выдаче", 36, y);
+  g.textAlign = "right"; g.fillStyle = pink; g.font = font(900, 26); g.fillText(rub(h.sum) + " ₽", W - 36, y + 2);
+
+  g.save(); g.translate(W / 2, y + 60); g.rotate(-0.1);
+  g.strokeStyle = pink; g.lineWidth = 3;
+  g.beginPath(); g.roundRect(-70, -20, 140, 40, 10); g.stroke();
+  g.fillStyle = pink; g.textAlign = "center"; g.textBaseline = "middle"; g.font = font(900, 18);
+  g.fillText("ОДОБРЕНО", 0, 1); g.restore();
+  g.textBaseline = "alphabetic";
+  g.textAlign = "center"; g.fillStyle = muted; g.font = font(400, 13);
+  g.fillText("Предъяви чек кассиру 💗", W / 2, H - 34);
+
+  const url = c.toDataURL("image/png");
+  $("shot-img").src = url;
+  $("shot-dl").href = url; $("shot-dl").download = "chek-" + h.id + ".png";
+  $("shot").hidden = false;
+}
+$("shot-close").addEventListener("click", () => { $("shot").hidden = true; });
+
+/* ---------- Мелочи ---------- */
+let toastTimer;
+function toast(text) {
+  const t = $("toast"); t.textContent = text; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 4000);
+}
+function confetti() {
+  const em = ["💗", "🍬", "💸", "✨", "💕", "🪙"];
+  for (let k = 0; k < 28; k++) {
+    const s = document.createElement("span");
+    s.className = "confetti";
+    s.textContent = em[k % em.length];
+    s.style.left = Math.random() * 100 + "vw";
+    s.style.animationDuration = 1.6 + Math.random() * 1.6 + "s";
+    s.style.animationDelay = Math.random() * .4 + "s";
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 4000);
+  }
+}
+
+const wishes = [
+  "Сегодня тебя ждёт объятие вне очереди 🤗",
+  "Любовь — это когда делишься последней жвачкой.",
+  "Любовь — это смеяться над одной и той же шуткой в сотый раз.",
+  "Сегодня курс твоей улыбки бьёт все рекорды ✨",
+  "Любовь — это когда тебе приносят чай, не спрашивая.",
+  "Вечером кассир обязан выдать один поцелуй сверх курса 😘",
+  "Любовь — это собирать фантики вместе.",
+  "Сегодня удачный день для крупных обменов 💸",
+  "Любовь — это когда даже банк называет тебя самой лучшей.",
+  "Любовь — это ждать вместе вечера пятницы.",
+  "Твои кукиши — самые ценные в мире. Как и ты 💗",
+  "Любовь — это знать, какое мороженое она любит.",
+];
+$("wish-btn").addEventListener("click", () => {
+  $("wish").textContent = wishes[Math.floor(hash(todayI + 4242) * wishes.length)];
+  $("wish-btn").textContent = "Новое предсказание — завтра";
+  $("wish-btn").disabled = true;
+});
+
+/* ---------- Запуск ---------- */
+function afterChange() { renderLimit(); renderHistory(); renderDeposits(); renderAch(true); }
+function renderAll() {
+  renderRate(); renderForecast(); renderChart(); renderLimit(); renderHistory(); renderDeposits(); renderAch(false);
+  $("wrapper-day").innerHTML = drawnWrapper(todayI, dayNum());
+}
+renderAll();
+
+// Раз в 30 секунд проверяем, не начался ли счастливый час или новый день
+let lastKey = todayI + ":" + isHappy();
+setInterval(() => {
+  now = new Date(); todayI = dayIndex(now);
+  const key = todayI + ":" + isHappy();
+  if (key !== lastKey) { lastKey = key; renderAll(); }
+}, 30000);
+</script>
+</body>
+</html>
